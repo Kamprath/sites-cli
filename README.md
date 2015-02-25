@@ -9,7 +9,8 @@ This is useful if you want to avoid using virtual hosts or having to frequently 
 * This script expects `/usr/bin/php` to exist. If your PHP binary is located elsewhere, modify the `sites` file and update the interpreter directive, `#!/usr/bin/php`, with the path to your PHP binary.
 
 ### Setup
-1. **Move the script to /usr/local/bin**
+1. **Download the script**
+<br>`cd /usr/local/bin && curl -O https://raw.githubusercontent.com/ravroid/sites-cli/master/sites`
 
 2. **Make the script executable**
 <br>`sudo chmod u+x /usr/local/bin/sites`
@@ -22,7 +23,7 @@ This is useful if you want to avoid using virtual hosts or having to frequently 
 
 ### Usage
 **Add a site**
-<br>To add a site, use `sites add <name> <path>`.
+<br>To add a site, use `sites add <name> <absolute path>`.
 
 **Use a site**
 <br>To switch the active sites being served, use `sites use <name>`.
@@ -31,4 +32,4 @@ This is useful if you want to avoid using virtual hosts or having to frequently 
 <br>To list all sites that have been added, simply run `sites`.
 
 **Show command help**
-<br>To a list of available command options, run `sites help`.				
+<br>To a list of available command options, run `sites help`.

@@ -21,7 +21,7 @@ if (sizeof($argv) > 1) {
             if (isset($argv[2]) && isset($argv[3])) {
                 addSite($config, $configPath, $argv[2], $argv[3]);
             } else {
-                echo "usage: sites add <name> <path>\n";
+                echo "usage: sites add <name> <absolute path>\n";
             }
 
             break;
@@ -46,7 +46,7 @@ if (sizeof($argv) > 1) {
 
         case 'help':
             echo "Command options:\n";
-            echo "  add <name> <path>\tRegister a new site\n";
+            echo "  add <name> <absolute path>\tRegister a new site\n";
             echo "  remove <name>\t\tUnregister an existing site\n";
             echo "  use <name>\t\tActivate a site\n";
 
@@ -167,7 +167,7 @@ function listSites(array $config) {
  		}
          echo "\nType \"sites help\" for a list of command options.";
  	} else {
- 		echo "No sites have been added yet. To add a site, use: sites add <name> <path>\n";
+ 		echo "No sites have been added yet. To add a site, use: sites add <name> <absolute path>\n";
  	}
  }
 
