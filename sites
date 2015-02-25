@@ -1,0 +1,259 @@
+#!/usr/bin/php
+
+<?php
+
+/* Configuration */
+$configPath = getenv('HOME') . DIRECTORY_SEPARATOR . '.sites.json';
+$config = array(
+	'symlink_path' => null,
+	'sites' => null
+);
+
+/* Load configuration */
+if (!loadConfig($configPath, $config)) {
+	setup($configPath, $config);
+}
+
+/* Interpret command */
+if (sizeof($argv) > 1) {
+    switch ($argv[1]) {
+        case 'add':
+            if (isset($argv[2]) && isset($argv[3])) {
+                addSite($config, $configPath, $argv[2], $argv[3]);
+            } else {
+                echo "usage: sites add <name> <path>\n";
+            }
+
+            break;
+
+        case 'remove':
+            if (isset($argv[2])) {
+                removeSite($config, $configPath, $argv[2]);
+            } else {
+                echo "usage: sites remove <name>\n";
+            }
+
+            break;
+
+        case 'use':
+            if (isset($argv[2])) {
+                useSite($config, $configPath, $argv[2]);
+            } else {
+                echo "usage: sites use <name>\n";
+            }
+
+            break;
+
+        case 'help':
+            echo "Command options:\n";
+            echo "  add <name> <path>\tRegister a new site\n";
+            echo "  remove <name>\t\tUnregister an existing site\n";
+            echo "  use <name>\t\tActivate a site\n";
+
+            break;
+
+        default:
+            echo "Unrecognized command. Type 'sites help' to view available commands.\n";
+    }
+} else {
+    listSites($config);
+}
+echo "\n";
+
+/* Functions */
+
+/**
+ * Load config data from file
+ * @param  string $configPath	Path to the config file
+ * @return bool 				Returns true if config was loaded, false otherwise
+ */
+function loadConfig($configPath, &$config) {
+    $success = false;
+
+    if (file_exists($configPath)) {
+        $data = file_get_contents($configPath);
+
+        if ($data !== false) {
+            $data = json_decode($data, true);
+
+            if ($data != false) {
+                foreach ($config as $key => $val) {
+                    $config[$key] = (isset($data[$key])) ? $data[$key] : null;
+                    if (isset($data[$key])) {
+                        $config[$key] = $data[$key];
+                    } else {
+                        break;
+                    }
+                }
+
+                // check if symlink exists
+                if (file_exists($config['symlink_path'])) {
+                    $success = true;
+                }
+            }
+        }
+    }
+
+    return $success;
+}
+
+/**
+ * Prompt for config data and save to config file
+ * @param string $configPath    Path to config file
+ * @param array $config               Config data
+ */
+function setup($configPath, &$config) {
+    $valid = false;
+    $input = null;
+
+    // create config file if needed
+    if (!file_exists($configPath)) {
+        touch($configPath);
+    }
+
+    while (!$valid) {
+        echo "Enter a directory path to where the symlink should be stored: ";
+        $input = trim(fgets(STDIN));
+        // resolve home directory, if '~' is used
+        $input = (substr($input, 0, 1) == '~') ? str_replace('~', getenv('HOME'), $input) : $input;
+
+        if (file_exists(realpath($input))) {
+            if (symlink($input, $input . DIRECTORY_SEPARATOR . 'site_link')) {
+                $config['symlink_path'] = $input . DIRECTORY_SEPARATOR . 'site_link';
+                echo("symlink created at " . $input . DIRECTORY_SEPARATOR . "site_link\n\n");
+                $valid = true;
+            } else {
+                echo "Failed to create symlink. Try specifying a different path.\n\n";
+            }
+        } else {
+            echo "\nPath doesn't exist.\n";
+        }
+    }
+
+    saveConfig($config, $configPath);
+
+    echo("Setup complete! Update your web server to serve files from " . $input . DIRECTORY_SEPARATOR . "site_link\n");
+}
+
+/**
+ * Save config data to config file
+ * @param array $config         Config data
+ * @param string $configPath    Path to config file
+ */
+function saveConfig(array $config, $configPath) {
+ 	if (file_put_contents($configPath, json_encode($config)) === false) {
+ 		echo "Error: Failed to save config data.\n";
+ 		exit;
+    }
+}
+
+/**
+ * Output a list of saved sites
+ * @param array $config     Config data
+ */
+function listSites(array $config) {
+ 	$sites = &$config['sites'];
+
+ 	if (sizeof($sites) > 0) {
+ 		echo "Sites:\n";
+ 		foreach ($sites as $key => $vals) {
+ 			if ($vals['active']) {
+ 				echo "* ";
+ 			} else {
+ 				echo "  ";
+ 			}
+			
+ 			echo $key . "\t\t" . $vals['path'] . "\n";
+ 		}
+         echo "\nType \"sites help\" for a list of command options.";
+ 	} else {
+ 		echo "No sites have been added yet. To add a site, use: sites add <name> <path>\n";
+ 	}
+ }
+
+/**
+ * Update the symlink to point to the specified site
+ * @param array $config         Config data
+ * @param string $configPath    The path to the config file
+ * @param string $name          The site name
+ */
+function useSite(array &$config, $configPath, $name) {
+ 	$sites = &$config['sites'];
+ 	// update $config and set 'active' property to true for specified site
+ 	if (isset($sites[$name])) {
+ 		// set all 'active' properties to false to deactivate current site
+ 		foreach($sites as $key => $vals) {
+ 			$sites[$key]['active'] = false;
+ 		}
+
+ 		$sites[$name]['active'] = true;
+
+ 		if (file_exists($config['symlink_path'])) {
+ 			unlink($config['symlink_path']);
+ 		}
+
+ 		if (symlink($sites[$name]['path'], $config['symlink_path'])) {
+ 			saveConfig($config, $configPath);
+ 			echo "Set active site to '$name'.\n";
+ 		} else {
+ 			echo "Error: Failed to create symbolic link.\n";
+ 		}
+ 	} else {
+ 		echo "No site found with name '$name'.\n";
+ 	}
+ }
+
+/**
+ * Save a site to stored config data
+ * @param array $config         Config data
+ * @param string $configPath    The path to the config file
+ * @param string $name          A name to reference the site by
+ * @param string $path          Path to the site's resource directory
+ */
+function addSite(array $config, $configPath, $name, $path) {
+ 	$sites = &$config['sites'];
+
+ 	if (!isset($sites[$name])) {
+ 		if (file_exists(realpath($path))) {
+ 			$sites[$name] = array('path' => $path, 'active' => false);
+ 			saveConfig($config, $configPath);
+ 			echo "Added site '" . $name . "'. To set the site as active, use: sites use " . $name . ".\n";
+ 		} else {
+ 			echo "The path you specified does not exist.\n";
+ 		}
+ 	} else {
+ 		echo "That site name is already being used. Please choose a different name.\n";
+ 	}
+ }
+
+/**
+ * Remove a stored site
+ * @param array $config         Config data
+ * @param string $configPath    The path to the config file
+ * @param string $name          The site name
+ */
+function removeSite(array &$config, $configPath, $name) {
+    $sites = &$config['sites'];
+
+    if (isset($sites[$name])) {
+        $isActive = $sites[$name]['active'];
+
+        unset($sites[$name]);
+        echo "Removed site '$name'.\n";
+
+        // if removed site was active, set the first site in the set to active
+        if ($isActive) {
+            if (sizeof($sites) > 0) {
+                $keys = array_keys($sites);
+                useSite($config, $configPath, $keys[0]);
+                $sites[$keys[0]]['active'] = true;
+            } else {
+                echo "You removed the last remaining site. Your web server currently points to no servable directory.\n";
+            }
+        }
+
+        saveConfig($config, $configPath);
+    } else {
+        echo "No site named '$name' exists.\n";
+    }
+}
