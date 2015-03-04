@@ -4,6 +4,8 @@ This utility allows you to quickly switch between directories served by your web
 This is useful if you want to avoid using virtual hosts or having to frequently change your web server's document root.
 
 ### Requirements
+* A Linux or Mac OS X environment
+
 * [PHP CLI](http://php.net/manual/en/features.commandline.php) is required to run this utility
 
 * This script expects `/usr/bin/php` to exist. If your PHP binary is located elsewhere, modify the `sites` file and update the interpreter directive, `#!/usr/bin/php`, with the path to your PHP binary.
