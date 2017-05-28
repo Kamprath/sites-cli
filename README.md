@@ -1,27 +1,28 @@
 # sites-cli
-This utility allows you to quickly switch between directories served by your web server. The script simply updates a symbolic link that your web server uses as its document root to the location of whichever site you wish to use.
+Simple PHP CLI for managing document root directories.
 
-This is useful if you want to avoid using virtual hosts or having to frequently change your web server's document root.
+This utility allows you to quickly switch the directory being served by your web server. The script simply updates a symbolic link that you configure Apache/NGINX/IIS to serve from.
+
+This is useful for users who do not want to use virtual hosts but wish to serve from multiple directories.
 
 ### Requirements
-* A Linux or Mac OS X environment
+* Bash shell
 
-* [PHP CLI](http://php.net/manual/en/features.commandline.php) is required to run this utility
+* PHP 5+
 
-* This script expects `/usr/bin/php` to exist. If your PHP binary is located elsewhere, modify the `sites` file and update the interpreter directive, `#!/usr/bin/php`, with the path to your PHP binary.
 
 ### Setup
 1. **Download the script**
-<br>`cd /usr/local/bin && curl -O https://raw.githubusercontent.com/ravroid/sites-cli/master/sites`
+  <br>`cd /usr/local/bin && curl -O https://raw.githubusercontent.com/kamprath/sites-cli/master/sites`
 
 2. **Make the script executable**
-<br>`sudo chmod u+x /usr/local/bin/sites`
+  <br>`sudo chmod u+x /usr/local/bin/sites`
 
 3. **Run `sites` from your terminal**
-<br>The first time that `sites` is run, you will be prompted with configuration.
+  <br>The first time that `sites` is run, you will be prompted with configuration.
 
 4. **Configure your web server to serve from the symlink**
-<br>For whichever web server you use, change the root directory it serves its files from to the symlink that was created, then restart the web server.
+  <br>Configure your web server's settings to serve from the symbolic link file that was created and restart the web server.
 
 ### Usage
 **Add a site**
